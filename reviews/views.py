@@ -10,14 +10,15 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 from .permissions import ReviewsPermission
 from rest_framework.pagination import PageNumberPagination
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 class ReviewsView(APIView, PageNumberPagination):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [ReviewsPermission]
 
     def post(self, request: Request, movie_id: int):
-        token = AccessToken(request.META.get(
-            "HTTP_AUTHORIZATION").split(" ")[1])
+        token = AccessToken(request.META.get("HTTP_AUTHORIZATION").split(" ")[1])
 
         if request.data["stars"] > 10:
             return Response(
@@ -53,18 +54,19 @@ class ReviewsView(APIView, PageNumberPagination):
     def get(self, request: Request, movie_id: int):
         reviews = Review.objects.all().filter(movie_id=movie_id)
 
-        result_page = self.paginate_queryset(
-            reviews, request, view=self)
+        result_page = self.paginate_queryset(reviews, request, view=self)
         serializer = ReviewSerializer(result_page, many=True)
 
         return self.get_paginated_response(serializer.data)
 
 
 class ReviewDeleteView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [ReviewsPermission]
+
     def delete(self, request: Request, review_id: int):
 
-        token = AccessToken(request.META.get(
-            "HTTP_AUTHORIZATION").split(" ")[1])
+        token = AccessToken(request.META.get("HTTP_AUTHORIZATION").split(" ")[1])
         user = get_object_or_404(User, pk=token["user_id"])
 
         try:
@@ -72,23 +74,26 @@ class ReviewDeleteView(APIView):
         except Http404:
             return Response({"message": "Review not found."}, status.HTTP_404_NOT_FOUND)
 
-        if (user.is_staff == False and user.is_superuser == False) or (review.user.id != user.id):
-            return Response({
-                "message": "You are not authorized to do this."
-            }, status.HTTP_401_UNAUTHORIZED)
+        if (user.is_staff == False and user.is_superuser == False) or (
+            review.user.id != user.id
+        ):
+            return Response(
+                {"message": "You are not authorized to do this."},
+                status.HTTP_401_UNAUTHORIZED,
+            )
 
         review.delete()
         return Response("", status.HTTP_204_NO_CONTENT)
 
 
 class ReviewGetAllView(APIView, PageNumberPagination):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [ReviewsPermission]
 
     def get(self, request: Request):
         reviews = Review.objects.all()
 
-        result_page = self.paginate_queryset(
-            reviews, request, view=self)
+        result_page = self.paginate_queryset(reviews, request, view=self)
         serializer = ReviewSerializer(result_page, many=True)
 
         return self.get_paginated_response(serializer.data)

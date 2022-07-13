@@ -1,4 +1,5 @@
 from django.http import Http404
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView, Request, Response, status
 from movies.serializers import MovieSerializer
@@ -8,6 +9,7 @@ from rest_framework.pagination import PageNumberPagination
 
 
 class MoviesView(APIView, PageNumberPagination):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [MoviesPermission]
 
     def post(self, request: Request):

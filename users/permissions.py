@@ -1,9 +1,12 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission
+from rest_framework.views import Request
 
 
-class UsersPermission(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
+class UsersPermission(BasePermission):
+    def has_permission(self, request: Request, _):
+        staff_methods = {"GET", "DELETE", "PATCH"}
 
-        return request.user.is_authenticated and request.user.is_superuser
+        if request.method in staff_methods:
+            return request.user.is_staff
+
+        return True

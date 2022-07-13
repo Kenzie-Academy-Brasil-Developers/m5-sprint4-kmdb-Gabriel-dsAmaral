@@ -5,6 +5,7 @@ from .permissions import UsersPermission
 from users.models import User
 from users.serializers import UserSerializer
 from rest_framework.pagination import PageNumberPagination
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 class UserPostView(APIView):
@@ -21,6 +22,7 @@ class UserPostView(APIView):
 
 
 class UserGetView(APIView, PageNumberPagination):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [UsersPermission]
 
     def get(self, request: Request):
@@ -32,6 +34,7 @@ class UserGetView(APIView, PageNumberPagination):
 
 
 class UserGetByIdView(APIView):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [UsersPermission]
 
     def get(self, _: Request, user_id: int):
